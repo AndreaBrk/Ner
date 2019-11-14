@@ -76,7 +76,7 @@ sentences = getter.sentences
 
 batch_size = 64 
 # Passes through entire dataset
-epochs = 100
+epochs = 300
 # Maximum length of review
 max_len = 500 
 # Dimension of embedding vector
