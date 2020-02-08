@@ -24,6 +24,16 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 
 
+
+
+from sklearn.linear_model import RidgeClassifier
+from sklearn.model_selection import train_test_split as tts
+from yellowbrick.classifier import PrecisionRecallCurve
+from yellowbrick.datasets import load_spam
+
+import pickle
+
+
 #Reading the csv file
 df = pd.read_csv('dataset/dataset.csv', encoding = "ISO-8859-1")
 df_test = pd.read_csv('dataset/test.csv', encoding = "ISO-8859-1")
@@ -160,6 +170,7 @@ y_test = [sent2labels(s) for s in sentences_test]
 X_train = X
 y_train = y
 
+# # anda este
 # crf = CRF(algorithm = 'lbfgs',
 #          c1 = 0.4,
 #          c2 = 0.4,
@@ -168,44 +179,49 @@ y_train = y
 
 
 
-crf = CRF(algorithm = 'l2sgd',
-         c2 = 1,
-         max_iterations = 1000,
-         all_possible_transitions = False)
+# crf = CRF(algorithm = 'l2sgd',
+#          c2 = 1,
+#          max_iterations = 1000,
+#          all_possible_transitions = False)
 
 
-# crf = CRF(
-#     algorithm='lbfgs',
-#     max_iterations=100,
-#     all_possible_transitions=True
-# )
-# params_space = {
-#     'c1': scipy.stats.expon(scale=0.5),
-#     'c2': scipy.stats.expon(scale=0.05),
-# }
+# hiperpharameter
+crf = CRF(
+    algorithm='lbfgs',
+    max_iterations=100,
+    all_possible_transitions=True
+)
+params_space = {
+    'c1': scipy.stats.expon(scale=0.5),
+    'c2': scipy.stats.expon(scale=0.05),
+}
 
-# # use the same metric for evaluation
-# f1_scorer = make_scorer(metrics.flat_f1_score,
-#                         average='weighted', labels=labels)
+# use the same metric for evaluation
+f1_scorer = make_scorer(metrics.flat_f1_score,
+                        average='weighted', labels=labels)
 
-# # search
-# rs = RandomizedSearchCV(crf, params_space,
-#                         cv=3,
-#                         refit=True,
-#                         verbose=1,
-#                         n_jobs=-1,
-#                         n_iter=50,
-#                         scoring=f1_scorer)
+# search
+rs = RandomizedSearchCV(crf, params_space,
+                        cv=3,
+                        refit=True,
+                        verbose=1,
+                        n_jobs=-1,
+                        n_iter=50,
+                        scoring=f1_scorer)
 
-                        
-crf.fit(X_train, y_train)
-# rs.fit(X_train, y_train)
+# # anda este                
+# crf.fit(X_train, y_train)
+rs.fit(X_train, y_train)
 
 
-# crf = rs.best_estimator_
-# print('best params:', rs.best_params_)
-# print('best CV score:', rs.best_score_)
-# print('model size: {:0.2f}M'.format(rs.best_estimator_.size_ / 1000000))
+crf = rs.best_estimator_
+print('best params:', rs.best_params_)
+print('best CV score:', rs.best_score_)
+print('model size: {:0.2f}M'.format(rs.best_estimator_.size_ / 1000000))
+
+pkl_filename = "crf-model.pkl"
+with open(pkl_filename, 'wb') as file:
+    pickle.dump(crf, file)
 
 #Predicting on the test set.
 y_pred = crf.predict(X_test)
@@ -217,18 +233,7 @@ accuracy = flat_precision_score(y_test, y_pred, average = 'weighted')
 print(accuracy)
 
 
-
+print(y_test)
+print(y_pred)
 report = flat_classification_report(y_test, y_pred)
 print(report)
-
-# y_test = MultiLabelBinarizer().fit_transform(y_test)
-# y_pred = MultiLabelBinarizer().fit_transform(y_pred)  
-# print (y_test)
-# print(classification_report(y_test, y_pred))
-# print(classification_report(y_test, y_pred,labels = labels))
-print(multilabel_confusion_matrix(sum(y_test, []), sum(y_pred, []), labels=labels))
-
-# print(confusion_matrix(
-#     y_test.values.argmax(axis=1), predictions.argmax(axis=1)))
-
-# sklearn.metrics.f1_score(y_test, y_pred, average='micro')
