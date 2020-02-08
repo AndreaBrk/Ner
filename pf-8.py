@@ -78,28 +78,37 @@ sentences_test[0]
 
 #sentence with its pos and tag.
 sent = getter.get_text()
-print(sent)
+# print(sent)
 
 #sentence with its pos and tag in test
 sent_test = getter_test.get_text()
-print(sent_test)
+# print(sent_test)
 
 sentences = getter.sentences
 sentences_test = getter_test.sentences
 
 
 # Number of data points passed in each iteration
-batch_size = 64 
+# batch_size = 64 
+batch_size = 512 
 # Passes through entire dataset
-epochs = 300
+epochs = 10
 # Maximum length of review
-max_len = 500 
+max_len = 800 
 # Dimension of embedding vector
-embedding = 40
+embedding = 50
 
 #Getting unique words and labels from data
 words = list(df['Word'].unique())
 tags = list(df['Tag'].unique())
+
+#Getting unique words and labels from data
+words_test = list(df_test['Word'].unique())
+# tags_test = list(df_test['Tag'].unique())
+
+words = words + words_test
+print(words)
+
 # Dictionary word:index pair
 # word is key and its value is corresponding index
 word_to_index = {w : i + 2 for i, w in enumerate(words)}
@@ -115,50 +124,57 @@ idx2word = {i: w for w, i in word_to_index.items()}
 idx2tag = {i: w for w, i in tag_to_index.items()}
 
 
-#Getting unique words and labels from data
-words_test = list(df_test['Word'].unique())
-tags_test = list(df_test['Tag'].unique())
+
 
 # Dictionary word:index pair
 # word is key and its value is corresponding index
-word_to_index_test = {w : i + 2 for i, w in enumerate(words_test)}
-word_to_index_test["UNK"] = 1
-word_to_index_test["PAD"] = 0
+# word_to_index_test = {w : i + 2 for i, w in enumerate(words_test)}
+# word_to_index_test["UNK"] = 1
+# word_to_index_test["PAD"] = 0
 
 # Dictionary lable:index pair
 # label is key and value is index.
-tag_to_index_test = {t : i + 1 for i, t in enumerate(tags_test)}
-tag_to_index_test["PAD"] = 0
+# tag_to_index_test = {t : i + 1 for i, t in enumerate(tags_test)}
+# tag_to_index_test["PAD"] = 0
 
-idx2word_test = {i: w for w, i in word_to_index_test.items()}
-idx2tag_test = {i: w for w, i in tag_to_index_test.items()}
+# idx2word_test = {i: w for w, i in word_to_index_test.items()}
+# idx2tag_test = {i: w for w, i in tag_to_index_test.items()}
 
-# print("The word India is identified by the index: {}".format(word_to_index["India"]))
-# print("The label B-org for the organization is identified by the index: {}".format(tag_to_index["B-org"]))
+# # print("The word India is identified by the index: {}".format(word_to_index["India"]))
+# # print("The label B-org for the organization is identified by the index: {}".format(tag_to_index["B-org"]))
 
 # Converting each sentence into list of index from list of tokens
 X = [[word_to_index[w[0]] for w in s] for s in sentences]
-X_test = [[word_to_index_test[w[0]] for w in s] for s in sentences_test]
+X_test = [[word_to_index[w[0]] for w in s] for s in sentences_test]
+# X_test = [[word_to_index_test[w[0]] for w in s] for s in sentences_test]
+
 
 # Padding each sequence to have same length  of each word
 X = pad_sequences(maxlen = max_len, sequences = X, padding = "post", value = word_to_index["PAD"])
-X_test = pad_sequences(maxlen = max_len, sequences = X_test, padding = "post", value = word_to_index_test["PAD"])
+X_test = pad_sequences(maxlen = max_len, sequences = X_test, padding = "post", value = word_to_index["PAD"])
+# X_test = pad_sequences(maxlen = max_len, sequences = X_test, padding = "post", value = word_to_index_test["PAD"])
+
+
 
 
 # Convert label to index
 y = [[tag_to_index[w[2]] for w in s] for s in sentences]
-y_test = [[tag_to_index_test[w[2]] for w in s] for s in sentences_test]
+y_test = [[tag_to_index[w[2]] for w in s] for s in sentences_test]
+
+# y_test = [[tag_to_index_test[w[2]] for w in s] for s in sentences_test]
+
 
 # padding
 y = pad_sequences(maxlen = max_len, sequences = y, padding = "post", value = tag_to_index["PAD"])
-y_test = pad_sequences(maxlen = max_len, sequences = y_test, padding = "post", value = tag_to_index_test["PAD"])
+y_test = pad_sequences(maxlen = max_len, sequences = y_test, padding = "post", value = tag_to_index["PAD"])
+# y_test = pad_sequences(maxlen = max_len, sequences = y_test, padding = "post", value = tag_to_index_test["PAD"])
 
 num_tag = df['Tag'].nunique()
-num_tag_test = df_test['Tag'].nunique()
+# num_tag_test = df_test['Tag'].nunique()
 
 # One hot encoded labels
 y = [to_categorical(i, num_classes = num_tag + 1) for i in y]
-y_test = [to_categorical(i, num_classes = num_tag_test + 1) for i in y_test]
+y_test = [to_categorical(i, num_classes = num_tag + 1) for i in y_test]
 
 
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.15)
@@ -193,6 +209,7 @@ out = crf(model)  # output
 model = Model(input, out)
 model.compile(optimizer="rmsprop", loss=crf.loss_function, metrics=[crf.accuracy])
 
+
 model.summary()
 
 checkpointer = ModelCheckpoint(filepath = 'model.h5',
@@ -222,7 +239,7 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
-path = 'finalized_model.sav'
+path = 'finalized_model_index_1_echos.sav'
 model.save(path)
 
 
@@ -236,9 +253,13 @@ y_test_true = np.argmax(y_test, -1)
 # y_pred = [[idx2tag[i] for i in row] for row in y_pred]
 # y_test_true = [[idx2tag[i] for i in row] for row in y_test_true]
 
+# # Convert the index to tag
+# y_pred = [[idx2tag_test[i] for i in row] for row in y_pred]
+# y_test_true = [[idx2tag_test[i] for i in row] for row in y_test_true]
+
 # Convert the index to tag
-y_pred = [[idx2tag_test[i] for i in row] for row in y_pred]
-y_test_true = [[idx2tag_test[i] for i in row] for row in y_test_true]
+y_pred = [[idx2tag[i] for i in row] for row in y_pred]
+y_test_true = [[idx2tag[i] for i in row] for row in y_test_true]
 
 print("F1-score is : {:.1%}".format(f1_score(y_test_true, y_pred)))
 report = flat_classification_report(y_pred=y_pred, y_true=y_test_true)
