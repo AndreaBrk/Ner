@@ -1,18 +1,15 @@
 import pandas as pd
 import numpy as np
-
+import pickle
+import sys
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
-
 from keras.models import load_model  
 from keras_contrib.layers import CRF
 from keras_contrib.losses import  crf_loss
 from keras_contrib.metrics import crf_viterbi_accuracy
 from sklearn_crfsuite.metrics import flat_classification_report
-
-
 from sklearn.metrics import f1_score
-import pickle
 
 
 #Reading the csv file
@@ -62,8 +59,6 @@ with open('word_to_index.pickle', 'rb') as f:
 with open('tag_to_index.pickle', 'rb') as f:
     tag_to_index_test = pickle.load(f)
 
-print(tag_to_index_test)
-
 idx2tag = {i: w for w, i in tag_to_index_test.items()}
 
 X_test = [[word_to_index_test[w[0]] for w in s] for s in sentences_test]
@@ -77,10 +72,8 @@ y_test = [to_categorical(i, num_classes = num_tag_test + 1) for i in y_test]
 
 
 num_tags = df_test['Tag'].nunique()
-
 crf = CRF(num_tags+1)  # CRF layer
-
-filename = 'finalized_model_index.sav'
+filename = sys.argv[1] + '.sav'
 
 
 model= load_model(filename,custom_objects={'CRF':CRF, 
@@ -102,16 +95,13 @@ report = flat_classification_report(y_pred=y_pred, y_true=y_test_true)
 print(report)
 
 
-
 #Getting unique words and labels from data
 words = list(df['Word'].unique())
 
 #Getting unique words and labels from data
 words_test = list(df_test['Word'].unique())
-# tags_test = list(df_test['Tag'].unique())
 
 words = words + words_test
-# print(words)
 
 
 # At every execution model picks some random test sample from test set.
@@ -120,10 +110,10 @@ p = model.predict(np.array([X_test[i]]))
 p = np.argmax(p, axis=-1)
 true = np.argmax(y_test[i], -1)
 
-# print("Sample number {} of {} (Test Set)".format(i, X_test.shape[0]))
-# # Visualization
-# print("{:15}||{:5}||{}".format("Word", "True", "Pred"))
-# print(30 * "=")
-# for w, t, pred in zip(X_test[i], true, p[0]):
-#     if w != 0:
-#         print("{:15}: {:5} {}".format(words[w-2], idx2tag[t], idx2tag[pred]))
+
+# Visualization
+print("{:15}||{:5}||{}".format("Word", "True", "Pred"))
+print(30 * "=")
+for w, t, pred in zip(X_test[i], true, p[0]):
+    if w != 0:
+        print("{:15}: {:5} {}".format(words[w-2], idx2tag[t], idx2tag[pred]))
