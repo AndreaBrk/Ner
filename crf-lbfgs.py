@@ -1,29 +1,31 @@
 import pandas as pd
 import numpy as np
-import pickle
 import sys
 import nltk
+import pickle
 import sklearn
 import scipy.stats
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
-from sklearn.metrics import classification_report
-from sklearn.preprocessing import MultiLabelBinarizer  
 from sklearn.metrics import multilabel_confusion_matrix
-
 from sklearn_crfsuite import CRF
 from sklearn_crfsuite.metrics import flat_f1_score
 from sklearn_crfsuite.metrics import flat_precision_score
 from sklearn_crfsuite.metrics import flat_classification_report
 
 
+
+
 #Reading the csv file
 df = pd.read_csv('dataset/dataset.csv', encoding = "ISO-8859-1")
 df_test = pd.read_csv('dataset/test.csv', encoding = "ISO-8859-1")
 
-
-#list the unique Tags
+#Displaying the unique Tags
 labels = list(df['Tag'].unique())
+print(labels)
+
+#Displaying the unique Tags
 labels_test = list(df_test['Tag'].unique())
+print(labels_test)
 
 #Checking null values, if any.
 df.isnull().sum()
@@ -55,6 +57,7 @@ class sentence(object):
 #Displaying one full sentence
 getter = sentence(df)
 sentences = [" ".join([s[0] for s in sent]) for sent in getter.sentences]
+sentences[0]
 
 #Displaying one full sentence for test
 getter_test = sentence(df_test)
@@ -66,7 +69,6 @@ sent = getter.get_text()
 sent_test = getter_test.get_text()
 sentences = getter.sentences
 sentences_test = getter_test.sentences
-
 
 def word2features(sent, i):
     word = sent[i][0]
@@ -116,19 +118,16 @@ y_train = [sent2labels(s) for s in sentences]
 X_test = [sent2features(s) for s in sentences_test]
 y_test = [sent2labels(s) for s in sentences_test]
 
-# CRF model
-crf = CRF(algorithm = 'lbfgs',
-         c1 = sys.argv[1],
-         c2 = sys.argv[2],
-         max_iterations = 100,
+crf = CRF(algorithm = 'l2sgd',
+         c2 = sys.argv[1],
+         max_iterations = 1000,
          all_possible_transitions = False)
 
-
-# trainning               
+# trainning                 
 crf.fit(X_train, y_train)
 
-# Save model
-pkl_filename = sys.argv[3] + ".pkl"
+# save model
+pkl_filename =  sys.argv[2] + ".pkl"
 with open(pkl_filename, 'wb') as file:
     pickle.dump(crf, file)
 
@@ -138,15 +137,5 @@ y_pred = crf.predict(X_test)
 f1_score = flat_f1_score(y_test, y_pred, average = 'weighted')
 print(f1_score)
 
-
-print(multilabel_confusion_matrix(sum(y_test, []), sum(y_pred, []), labels=labels))	
-
 report = flat_classification_report(y_test, y_pred)
 print(report)
-
-
-# print("{:15}||{:5}||{}".format("Word", "True", "Pred"))
-# print(30 * "=")
-# for ((w, r), original, pred) in zip(sentences_test[0], y_test[0], y_pred[0]):
-#     if w != 0:
-#         print("{:15}: {:5} {}".format(w,original, pred))
