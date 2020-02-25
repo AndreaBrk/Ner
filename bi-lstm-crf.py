@@ -91,12 +91,12 @@ words = words + words_test
 # word is key and its value is corresponding index
 word_to_index = {w : i + 2 for i, w in enumerate(words)}
 # word_to_index["UNK"] = 1
-word_to_index["PAD"] = 0
+word_to_index["O"] = 0
 
 # Dictionary lable:index pair
 # label is key and value is index.
 tag_to_index = {t : i + 1 for i, t in enumerate(tags)}
-tag_to_index["PAD"] = 0
+tag_to_index["O"] = 0
 
 idx2word = {i: w for w, i in word_to_index.items()}
 idx2tag = {i: w for w, i in tag_to_index.items()}
@@ -190,8 +190,19 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
+
+with open('word_to_index_O_500.pickle', 'wb') as file:
+    pickle.dump(word_to_index, file)
+
+
+with open('tag_to_index_O_500.pickle', 'wb') as file:
+    pickle.dump(tag_to_index, file)
+
+
+
 path = sys.argv[3] + '.sav'
 model.save(path)
+
 
 
 
