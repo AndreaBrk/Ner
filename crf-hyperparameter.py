@@ -8,6 +8,8 @@ import pickle
 import numpy as np
 import sys
 import scipy.stats
+from sklearn.metrics import make_scorer
+from sklearn_crfsuite import metrics
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.metrics import multilabel_confusion_matrix
 from sklearn_crfsuite import CRF
