@@ -43,7 +43,7 @@ class sentence(object):
             return None
 
 # Maximum length of review
-max_len = 800 
+max_len = int(sys.argv[2])
 
 #Displaying one full sentence test
 getter_test = sentence(df_test)
@@ -52,12 +52,12 @@ sentences_test[0]
 
 
 sentences_test = getter_test.sentences
-
-with open('word_to_index_O_500.pickle', 'rb') as f:
+word_to_index_path = sys.argv[3] + '.pickle'
+with open(word_to_index_path, 'rb') as f:
     word_to_index_test = pickle.load(f)
 
-
-with open('tag_to_index_O_500.pickle', 'rb') as f:
+tag_to_index_path = sys.argv[4] + '.pickle'
+with open(tag_to_index_path, 'rb') as f:
     tag_to_index_test = pickle.load(f)
 
 idx2tag = {i: w for w, i in tag_to_index_test.items()}
