@@ -191,11 +191,12 @@ plt.legend()
 plt.show()
 
 
-with open('word_to_index_O_500.pickle', 'wb') as file:
+word_to_index_path = sys.argv[4] + '.pickle'
+with open(word_to_index_path, 'wb') as file:
     pickle.dump(word_to_index, file)
 
-
-with open('tag_to_index_O_500.pickle', 'wb') as file:
+tag_to_index_path = sys.argv[5] + '.pickle'
+with open(tag_to_index_path, 'wb') as file:
     pickle.dump(tag_to_index, file)
 
 
